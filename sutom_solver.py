@@ -1,7 +1,5 @@
 from math import *
 
-dictionnary = open('result.txt', 'r').readlines()[0].split(' ')
-
 class Results:
 
     def __init__(self, nb_chars, N):
@@ -64,6 +62,34 @@ def get_answer(word):
     for position in range(len(word)):
         results.append(input("Color result for character {} : ".format(position + 1)))
     return Answer(word, Results(len(word), results_list_to_int(results)))
+
+def word_pair_to_int(word, solution):
+    processed_word = list(word)
+    processed_solution = list(solution)
+
+    colors = ['w' for i in range(len(word))]
+
+    for position in range(len(word)):
+        if processed_word[position] == processed_solution[position]:
+            colors[position] = 'r'
+            processed_solution[position] = '@'
+    
+    for position in range(len(word)):
+        if colors[position] != 'r':
+            for position2 in range(len(solution)):
+                if position != position2 and processed_word[position] == processed_solution[position2]:
+                    colors[position] = 'y'
+                    processed_solution[position2] = '@'
+
+    code = 0
+    for position in range(1, len(word)):
+        if colors[position] == 'r':
+            code += 2 * (3**(position - 1))
+        elif colors[position] == 'y':
+            code += (3**(position - 1))
+
+    return code
+
             
 def results_list_to_int(list):
     if list[0] != 'r':
@@ -82,9 +108,9 @@ def results_list_to_int(list):
 
 
 def get_words_list(first_char, nb_chars):
+    dictionnary = open('mots.txt', 'r', encoding='utf8').read().splitlines()
     words_list = []
     for word in dictionnary:
-        word = word.lower()
         if word[0] == first_char and len(word) == nb_chars:
             words_list.append(word)
     return words_list
@@ -101,17 +127,17 @@ def new_step(possible_words, all_propositions):
     max_information = 0
 
     for word in all_propositions:
-        information = 0
-        updated_possible_words = possible_words.copy()
+        informations = []
         for i in range(3**(len(word) - 1)):
+            informations.append(0)
 
-            answer = Answer(word, Results(len(word), i))
-            remaining_words = update_possible_words(updated_possible_words, answer)
-            for remaining_word in remaining_words:
-                updated_possible_words.remove(remaining_word)
+        for possible_word in possible_words:
+            informations[word_pair_to_int(word, possible_word)] += 1
+            pass
 
-            probability = len(remaining_words)/len(possible_words)
-
+        information = 0
+        for i in range(3**(len(word) - 1)):
+            probability = informations[i]/len(possible_words)
             if probability != 0:
                 information -= (probability * log2(probability))
 
